@@ -1,0 +1,6 @@
+locations:
+- build:
+    directory: ./testing12345687
+  code_source:
+    module_name: testing12345687.definitions
+  location_name: testing12345687
