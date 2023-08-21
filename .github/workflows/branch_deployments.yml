@@ -2,7 +2,7 @@ name: Serverless Branch Deployments
 on:
   pull_request:
     types: [opened, synchronize, reopened, closed]
-
+    
 concurrency:
   # Cancel in-progress deploys to same branch
   group: ${{ github.ref }}/branch_deployments
@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-20.04
     outputs:
       build_info: ${{ steps.parse-workspace.outputs.build_info }}
-
+    
     steps:
       - name: Prerun Checks
         id: prerun
@@ -39,25 +39,7 @@ jobs:
         with:
           ref: ${{ github.head_ref }}
           path: project-repo
-
-      - name: Parse dbt project and package with Dagster project
-        if: steps.prerun.outputs.result == 'pex-deploy'
-        run: |
-          pip install pip --upgrade
-          cd ${{ env.DBT_PROJECT_DIR }}/${{ env.DAGSTER_PROJECT_NAME }}
-          pip install . MarkupSafe==2.0.1 'click>8.1.0' 'Jinja2>3.0.0'
-          pip install pyOpenSSL --upgrade
-          cd -
-          rsync -avz --exclude ${{ env.DAGSTER_PROJECT_NAME }} --exclude .git ${{ env.DBT_PROJECT_DIR }}/ ${{ env.DBT_PACKAGE_DATA_DIR }}
-          dbt deps --project-dir ${{ env.DBT_PACKAGE_DATA_DIR }} --profiles-dir ${{ env.DBT_PACKAGE_DATA_DIR }}
-          dbt parse --project-dir ${{ env.DBT_PACKAGE_DATA_DIR }} --profiles-dir ${{ env.DBT_PACKAGE_DATA_DIR }}
-          rm ${{ env.DBT_PACKAGE_DATA_DIR }}/target/partial_parse.msgpack
-        shell: bash
-        env:
-          DAGSTER_PROJECT_NAME: 'dagster_dbt_scaffold'
-          DBT_PROJECT_DIR: "$GITHUB_WORKSPACE/project-repo"
-          DBT_PACKAGE_DATA_DIR: "$GITHUB_WORKSPACE/project-repo/$DAGSTER_PROJECT_NAME/dbt-project"
-
+          
       - name: Python Executable Deploy
         if: steps.prerun.outputs.result == 'pex-deploy'
         uses: dagster-io/dagster-cloud-action/actions/build_deploy_python_executable@v0.1
@@ -93,3 +75,4 @@ jobs:
           organization_id: ${{ secrets.ORGANIZATION_ID }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
